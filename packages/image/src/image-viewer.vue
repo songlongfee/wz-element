@@ -22,7 +22,7 @@
         </span>
       </template>
       <!-- ACTIONS -->
-      <div class="el-image-viewer__btn el-image-viewer__actions">
+      <div v-show="showActions" class="el-image-viewer__btn el-image-viewer__actions">
         <div class="el-image-viewer__actions__inner">
           <i class="el-icon-zoom-out" @click="handleActions('zoomOut')"></i>
           <i class="el-icon-zoom-in" @click="handleActions('zoomIn')"></i>
@@ -35,7 +35,26 @@
       </div>
       <!-- CANVAS -->
       <div class="el-image-viewer__canvas">
-        <img
+        <template v-for="(url, i) in urlList">
+          <video
+            v-if="i === index && isVideo(url)"
+            :key="i"
+            :src="url"
+            class="el-image-viewer__img"
+            :style="imgStyle"
+            controls="controls"/>
+          <img
+            v-else-if="i === index"
+            ref="img"
+            class="el-image-viewer__img"
+            :key="url"
+            :src="currentImg"
+            :style="imgStyle"
+            @load="handleImgLoad"
+            @error="handleImgError"
+            @mousedown="handleMouseDown">
+        </template>
+        <!-- <img
           v-for="(url, i) in urlList"
           v-if="i === index"
           ref="img"
@@ -45,7 +64,7 @@
           :style="imgStyle"
           @load="handleImgLoad"
           @error="handleImgError"
-          @mousedown="handleMouseDown">
+          @mousedown="handleMouseDown"> -->
       </div>
     </div>
   </transition>
@@ -120,6 +139,9 @@ export default {
     };
   },
   computed: {
+    showActions() {
+      return !/\.(mov|mp4|ogg|webm)$/i.test(this.urlList[this.index]);
+    },
     isSingle() {
       return this.urlList.length <= 1;
     },
@@ -160,13 +182,16 @@ export default {
     currentImg(val) {
       this.$nextTick(_ => {
         const $img = this.$refs.img[0];
-        if (!$img.complete) {
+        if ($img && !$img.complete) {
           this.loading = true;
         }
       });
     }
   },
   methods: {
+    isVideo(url) {
+      return /\.(mov|mp4|ogg|webm)$/i.test(url);
+    },
     hide() {
       this.deviceSupportUninstall();
       this.onClose();
@@ -206,12 +231,12 @@ export default {
         const delta = e.wheelDelta ? e.wheelDelta : -e.detail;
         if (delta > 0) {
           this.handleActions('zoomIn', {
-            zoomRate: 0.015,
+            zoomRate: 0.075,
             enableTransition: false
           });
         } else {
           this.handleActions('zoomOut', {
-            zoomRate: 0.015,
+            zoomRate: 0.075,
             enableTransition: false
           });
         }
